@@ -554,6 +554,112 @@ public:
   //! Size
   Standard_Integer Size(void) const { return Extent(); }
 
+public: // stl-like interface
+  //! Returns a reference to the value associated with the key.
+  //! If the key does not exist, it is created with a default value.
+  //! @param theKey Key to compute hash.
+  //! @return Reference to the value associated with the key.
+  value_type& operator[](const key_type& theKey)
+  {
+    DataMapNode* aNode = nullptr;
+    size_t       aHash;
+    if (lookup(theKey, aNode, aHash))
+    {
+      return aNode->ChangeValue();
+    }
+    if (Resizable())
+      ReSize(Extent());
+    DataMapNode** data = (DataMapNode**)myData1;
+    data[aHash]        = new (this->myAllocator) DataMapNode(theKey, TheItemType(), data[aHash]);
+    Increment();
+    return data[aHash]->ChangeValue();
+  }
+
+  //! Returns a reference to the value associated with the key.
+  //! If the key does not exist, it is created with a default value.
+  //! @param theKey Key to compute hash.
+  //! @return Reference to the value associated with the key.
+  value_type& operator[](key_type&& theKey)
+  {
+    DataMapNode* aNode = nullptr;
+    size_t       aHash;
+    if (lookup(theKey, aNode, aHash))
+    {
+      return aNode->ChangeValue();
+    }
+    if (Resizable())
+      ReSize(Extent());
+    DataMapNode** data = (DataMapNode**)myData1;
+    data[aHash]        = new (this->myAllocator)
+      DataMapNode(std::forward<TheKeyType>(theKey), TheItemType(), data[aHash]);
+    Increment();
+    return data[aHash]->ChangeValue();
+  }
+
+  //! Returns a reference to the value associated with the key.
+  //! If the key does not exist, it throws std::out_of_range exception.
+  //! @param theKey Key to compute hash.
+  //! @return Reference to the value associated with the key.
+  value_type& at(const key_type& theKey)
+  {
+    DataMapNode* aNode = nullptr;
+    if (!lookup(theKey, aNode))
+      throw std::out_of_range("NCollection_DataMap::at: key not found");
+    return aNode->ChangeValue();
+  }
+
+  //! Returns a reference to the value associated with the key.
+  //! If the key does not exist, it throws std::out_of_range exception.
+  //! @param theKey Key to compute hash.
+  //! @return Reference to the value associated with the key.
+  const value_type& at(const key_type& theKey) const
+  {
+    DataMapNode* aNode = nullptr;
+    if (!lookup(theKey, aNode))
+      throw std::out_of_range("NCollection_DataMap::at: key not found");
+    return aNode->Value();
+  }
+
+  //! Returns true if the map is empty.
+  bool empty() const noexcept { return IsEmpty(); }
+
+  //! Returns the number of elements in the map.
+  size_t size() const noexcept { return static_cast<size_t>(Extent()); }
+
+  //! Returns the maximum number of elements that the map can hold.
+  size_t max_size() const noexcept
+  {
+    return static_cast<size_t>(std::numeric_limits<Standard_Integer>::max());
+  }
+
+  //! Clears the map, removing all elements.
+  void clear() noexcept { Clear(); }
+
+  //! Swaps the contents of this map with another map.
+  //! @param theOther The map to swap with.
+  void swap(NCollection_DataMap& theOther) noexcept
+  {
+    if (this != &theOther)
+    {
+      Exchange(theOther);
+    }
+  }
+
+  //! Returns the number of elements with a specific key.
+  //! @param theKey The key to count.
+  //! @return The number of elements with the specified key (0 or 1).
+  //! Note: In a DataMap, each key is unique, so the count will be either 0 or 1.
+  size_t count(const key_type& theKey) const
+  {
+    DataMapNode* aNode = nullptr;
+    return lookup(theKey, aNode) ? 1 : 0;
+  }
+
+  //! Checks if the map contains a specific key.
+  //! @param theKey The key to check.
+  //! @return True if the key exists in the map, false otherwise.
+  bool contains(const key_type& theKey) const { return count(theKey) != 0; }
+
 protected:
   //! Lookup for particular key in map.
   //! @param[in] theKey key to compute hash

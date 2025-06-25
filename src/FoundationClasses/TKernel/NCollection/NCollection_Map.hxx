@@ -357,6 +357,38 @@ public:
   //! Size
   Standard_Integer Size(void) const { return Extent(); }
 
+public: // stl-like interface
+  //! Returns true if the map is empty.
+  bool empty() const noexcept { return IsEmpty(); }
+
+  //! Returns the number of elements in the map.
+  size_t size() const noexcept { return static_cast<size_t>(Extent()); }
+
+  //! Returns the theoretical maximum number of elements that can be stored in the map.
+  size_t max_size() const noexcept
+  {
+    return static_cast<size_t>(std::numeric_limits<Standard_Integer>::max());
+  }
+
+  //! Clears the map, removing all elements.
+  void clear() noexcept { Clear(); }
+
+  //! Swaps the contents of this map with those of another map.
+  void swap(NCollection_Map& theOther) noexcept
+  {
+    if (this != &theOther)
+    {
+      Exchange(theOther);
+    }
+  }
+
+  //! Returns the number of elements with key that compares equivalent to the specified argument.
+  size_t count(const TheKeyType& theKey) const { return Contains(theKey) ? 1 : 0; }
+
+  //! Checks if the map contains an element with the specified key.
+  //! Returns true if the map contains an element with the specified key.
+  bool contains(const TheKeyType& theKey) const { return Contains(theKey); }
+
 public:
   //! Checks if two maps contain exactly the same keys.
   //! This function compares the keys of this map and another map and returns true

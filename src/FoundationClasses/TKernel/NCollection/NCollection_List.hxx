@@ -364,6 +364,70 @@ public:
   //! Destructor - clears the List
   virtual ~NCollection_List(void) { Clear(); }
 
+public: // stl-like interface
+  //! Returns a reference to the first element in the list.
+  //! If the list is empty, it raises an exception.
+  value_type& front() { return First(); }
+
+  //! Returns a reference to the first element in the list.
+  //! If the list is empty, it raises an exception.
+  const value_type& front() const { return First(); }
+
+  //! Returns a reference to the last element in the list.
+  //! If the list is empty, it raises an exception.
+  value_type& back() { return Last(); }
+
+  //! Returns a reference to the last element in the list.
+  //! If the list is empty, it raises an exception.
+  const value_type& back() const { return Last(); }
+
+  //! Returns true if the list is empty, false otherwise.
+  bool empty() const noexcept { return IsEmpty(); }
+
+  //! Returns the number of elements in the list.
+  size_t size() const noexcept { return Size(); }
+
+  //! Returns the theoretical maximum number of elements that can be stored in the list.
+  size_t max_size() const noexcept
+  {
+    return static_cast<size_t>(std::numeric_limits<Standard_Integer>::max());
+  }
+
+  //! Clears the list, removing all elements.
+  void clear() noexcept { Clear(); }
+
+  //! Adds an element to the end of the list.
+  void push_back(const value_type& theItem) { Append(theItem); }
+
+  //! Adds an element to the end of the list.
+  void push_back(value_type&& theItem) { Append(std::forward<value_type>(theItem)); }
+
+  //! Removes the last element from the list.
+  //! If the list is empty, it raises an exception.
+  void pop_back() { RemoveLast(); }
+
+  //! Adds an element to the beginning of the list.
+  void push_front(const value_type& theItem) { Prepend(theItem); }
+
+  //! Adds an element to the beginning of the list.
+  void push_front(value_type&& theItem) { Prepend(std::forward<value_type>(theItem)); }
+
+  //! Removes the first element from the list.
+  //! If the list is empty, it raises an exception.
+  void pop_front() { RemoveFirst(); }
+
+  //! Swaps the contents of this list with another one.
+  void swap(NCollection_List& theOther) noexcept
+  {
+    if (this == &theOther)
+      return;
+
+    std::swap(myAllocator, theOther.myAllocator);
+    std::swap(myFirst, theOther.myFirst);
+    std::swap(myLast, theOther.myLast);
+    std::swap(myLength, theOther.myLength);
+  }
+
 private:
   // ----------- PRIVATE METHODS -----------
 

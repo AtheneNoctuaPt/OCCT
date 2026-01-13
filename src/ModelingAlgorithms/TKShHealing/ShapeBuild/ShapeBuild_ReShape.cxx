@@ -164,6 +164,30 @@ TopoDS_Shape ShapeBuild_ReShape::Apply(const TopoDS_Shape&    shape,
 
 TopoDS_Shape ShapeBuild_ReShape::Apply(const TopoDS_Shape& shape, const TopAbs_ShapeEnum until)
 {
+  NCollection_Map<TopoDS_Shape> aVisited;
+  return ApplyImpl(shape, until, aVisited);
+}
+
+//=================================================================================================
+
+int ShapeBuild_ReShape::Status(const TopoDS_Shape& ashape, TopoDS_Shape& newsh, const bool last)
+{
+  return BRepTools_ReShape::Status(ashape, newsh, last);
+}
+
+//=================================================================================================
+
+bool ShapeBuild_ReShape::Status(const ShapeExtend_Status status) const
+{
+  return ShapeExtend::DecodeStatus(myStatus, status);
+}
+
+//=================================================================================================
+
+TopoDS_Shape ShapeBuild_ReShape::ApplyImpl(const TopoDS_Shape&            shape,
+                                           const TopAbs_ShapeEnum         until,
+                                           NCollection_Map<TopoDS_Shape>& theVisited)
+{
   myStatus = ShapeExtend::EncodeStatus(ShapeExtend_OK);
   if (shape.IsNull())
     return shape;
@@ -180,11 +204,15 @@ TopoDS_Shape ShapeBuild_ReShape::Apply(const TopoDS_Shape& shape, const TopAbs_S
 
   // if shape replaced, apply modifications to the result recursively
   bool aConsLoc = ModeConsiderLocation();
-  if ((aConsLoc && !newsh.IsPartner(shape)) || (!aConsLoc && !newsh.IsSame(shape)))
+
+  if (theVisited.Add(shape))
   {
-    TopoDS_Shape res = Apply(newsh, until);
-    myStatus |= ShapeExtend::EncodeStatus(ShapeExtend_DONE1);
-    return res;
+    if ((aConsLoc && !newsh.IsPartner(shape)) || (!aConsLoc && !newsh.IsSame(shape)))
+    {
+      TopoDS_Shape res = ApplyImpl(newsh, until, theVisited);
+      myStatus |= ShapeExtend::EncodeStatus(ShapeExtend_DONE1);
+      return res;
+    }
   }
 
   TopAbs_ShapeEnum st = shape.ShapeType();
@@ -206,7 +234,7 @@ TopoDS_Shape ShapeBuild_ReShape::Apply(const TopoDS_Shape& shape, const TopAbs_S
   for (TopoDS_Iterator it(shape, false); it.More(); it.Next())
   {
     const TopoDS_Shape& sh = it.Value();
-    newsh                  = Apply(sh, until);
+    newsh                  = ApplyImpl(sh, until, theVisited);
     if (newsh != sh)
     {
       if (ShapeExtend::DecodeStatus(myStatus, ShapeExtend_DONE4))
@@ -253,18 +281,4 @@ TopoDS_Shape ShapeBuild_ReShape::Apply(const TopoDS_Shape& shape, const TopAbs_S
   replace(shape, result, result.IsNull() ? TReplacementKind_Remove : TReplacementKind_Modify);
 
   return result;
-}
-
-//=================================================================================================
-
-int ShapeBuild_ReShape::Status(const TopoDS_Shape& ashape, TopoDS_Shape& newsh, const bool last)
-{
-  return BRepTools_ReShape::Status(ashape, newsh, last);
-}
-
-//=================================================================================================
-
-bool ShapeBuild_ReShape::Status(const ShapeExtend_Status status) const
-{
-  return ShapeExtend::DecodeStatus(myStatus, status);
 }

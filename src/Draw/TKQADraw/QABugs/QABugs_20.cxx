@@ -4400,10 +4400,36 @@ static int OCC26441(Draw_Interpretor& theDi, int theNbArgs, const char** theArgV
   return 0;
 }
 
+#include <STEPControl_Reader.hxx>
+#include <BRep_Builder.hxx>
+#include <ShapeFix_Shape.hxx>
+#include <Draw_ProgressIndicator.hxx>
+static int tst(Draw_Interpretor& theDi, int theNbArgs, const char** theArgVec)
+{
+  STEPControl_Reader aReader;
+  aReader.ReadFile("C:/work/projects/occt/misc/33903/Shape.step", DESTEP_Parameters{});
+  aReader.TransferRoots();
+  TopoDS_Shape shape = aReader.OneShape();
+
+  ShapeFix_Shape aSfs(shape);
+  aSfs.SetPrecision(1.0e-4);
+  aSfs.SetMinTolerance(1.0e-6);
+  aSfs.SetMaxTolerance(1.0e-3);
+  // Draw_ProgressIndicator aProgress(theDi);
+  // aSfs.Perform(aProgress.Start());
+  aSfs.Perform(Draw::GetProgressBar()->Start());
+
+  TopoDS_Shape fixedShape = aSfs.Shape();
+  DBRep::Set("fixedShape", fixedShape);
+  
+  return 0;
+}
+
 void QABugs::Commands_20(Draw_Interpretor& theCommands)
 {
   const char* group = "QABugs";
 
+  theCommands.Add("tst", "tst", __FILE__, tst, group);
   theCommands.Add("OCC26675_1", "OCC26675_1 result", __FILE__, SurfaceGenOCC26675_1, group);
   theCommands.Add("OCC27021", "OCC27021", __FILE__, OCC27021, group);
   theCommands.Add("OCC27235", "OCC27235", __FILE__, OCC27235, group);

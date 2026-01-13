@@ -316,7 +316,7 @@ static bool SplitWire(const TopoDS_Face&                  face,
 
 //=================================================================================================
 
-bool ShapeFix_Face::Perform()
+bool ShapeFix_Face::Perform(const Message_ProgressRange& theProgress)
 {
   myStatus = ShapeExtend::EncodeStatus(ShapeExtend_OK);
   myFixWire->SetContext(Context());
@@ -387,7 +387,7 @@ bool ShapeFix_Face::Perform()
         }
         continue;
       }
-      if (theAdvFixWire->Perform())
+      if (theAdvFixWire->Perform(theProgress))
       {
         // fixed = true;
         isfixReorder  = (theAdvFixWire->StatusReorder(ShapeExtend_DONE) || isfixReorder);

@@ -292,7 +292,7 @@ int ShapeFix_Wire::NbEdges() const
 //           are limited if order of edges in the wire is not OK
 //=======================================================================
 
-bool ShapeFix_Wire::Perform()
+bool ShapeFix_Wire::Perform(const Message_ProgressRange& theProgress)
 {
   ClearStatuses();
   if (!IsLoaded())
@@ -316,6 +316,11 @@ bool ShapeFix_Wire::Perform()
     ReorderOK = !StatusReorder(ShapeExtend_FAIL);
   }
 
+  if (theProgress.UserBreak())
+  {
+    return false;
+  }
+
   // FixSmall is allowed to change topology only if mode is set and FixReorder
   // did not failed
   if (NeedFix(myFixSmallMode, myTopoMode))
@@ -332,10 +337,20 @@ bool ShapeFix_Wire::Perform()
     }
   }
 
+  if (theProgress.UserBreak())
+  {
+    return false;
+  }
+
   if (NeedFix(myFixConnectedMode, ReorderOK))
   {
     if (FixConnected())
       Fixed = true;
+  }
+
+  if (theProgress.UserBreak())
+  {
+    return false;
   }
 
   if (NeedFix(myFixEdgeCurvesMode))
@@ -349,10 +364,20 @@ bool ShapeFix_Wire::Perform()
     myFixShiftedMode = savFixShiftedMode;
   }
 
+  if (theProgress.UserBreak())
+  {
+    return false;
+  }
+
   if (NeedFix(myFixDegeneratedMode))
   {
     if (FixDegenerated())
       Fixed = true; // ?? if ! ReorderOK ??
+  }
+
+  if (theProgress.UserBreak())
+  {
+    return false;
   }
 
   // pdn - temporary to test
@@ -363,6 +388,11 @@ bool ShapeFix_Wire::Perform()
       FixShifted(); // skl 07.03.2002 for OCC180
   }
 
+  if (theProgress.UserBreak())
+  {
+    return false;
+  }
+
   if (myFixTailMode != 0)
   {
     if (FixTails())
@@ -370,6 +400,11 @@ bool ShapeFix_Wire::Perform()
       Fixed = true;
       FixShifted();
     }
+  }
+
+  if (theProgress.UserBreak())
+  {
+    return false;
   }
 
   if (NeedFix(myFixSelfIntersectionMode, myClosedMode))
@@ -384,10 +419,20 @@ bool ShapeFix_Wire::Perform()
     myFixIntersectingEdgesMode = savFixIntersectingEdgesMode;
   }
 
+  if (theProgress.UserBreak())
+  {
+    return false;
+  }
+
   if (NeedFix(myFixLackingMode, ReorderOK))
   {
     if (FixLacking())
       Fixed = true;
+  }
+
+  if (theProgress.UserBreak())
+  {
+    return false;
   }
 
   // TEMPORARILY without special mode !!!
@@ -397,6 +442,11 @@ bool ShapeFix_Wire::Perform()
     {
       Fixed = true;
     }
+
+  if (theProgress.UserBreak())
+  {
+    return false;
+  }
 
   if (!Context().IsNull())
     UpdateWire();

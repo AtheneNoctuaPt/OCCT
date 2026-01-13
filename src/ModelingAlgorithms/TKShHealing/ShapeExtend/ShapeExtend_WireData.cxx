@@ -186,6 +186,12 @@ void ShapeExtend_WireData::ComputeSeams(const bool enforce)
     }
   }
 
+  mySeamsCache.clear();
+  for (i = 1; i <= mySeams->Length(); i++)
+  {
+    mySeamsCache.insert(mySeams->Value(i));
+  }
+
   delete[] SE; // ne pas oublier !!
 }
 
@@ -546,13 +552,14 @@ bool ShapeExtend_WireData::IsSeam(const int num)
   if (num == mySeamF || num == mySeamR)
     return true;
   //  Pas suffisant : on regarde dans la liste
-  int i, nb = mySeams->Length();
-  for (i = 1; i <= nb; i++)
-  {
-    if (num == mySeams->Value(i))
-      return true;
-  }
-  return false;
+  // int i, nb = mySeams->Length();
+  // for (i = 1; i <= nb; i++)
+  // {
+  //   if (num == mySeams->Value(i))
+  //     return true;
+  // }
+  // return false;
+  return mySeamsCache.find(num) != mySeamsCache.end();
 }
 
 //=================================================================================================
